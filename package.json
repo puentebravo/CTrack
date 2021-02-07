@@ -1,0 +1,26 @@
+{
+  "name": "ctrack",
+  "version": "1.0.0",
+  "description": "A CLI for tracking employee data",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/puentebravo/CTrack.git"
+  },
+  "author": "C. Puente",
+  "license": "SEE LICENSE IN <LICENSE>",
+  "bugs": {
+    "url": "https://github.com/puentebravo/CTrack/issues"
+  },
+  "homepage": "https://github.com/puentebravo/CTrack#readme",
+  "dependencies": {
+    "console.table": "^0.10.0",
+    "dotenv": "^8.2.0",
+    "inquirer": "^7.3.3",
+    "mysql": "^2.18.1"
+  }
+}
