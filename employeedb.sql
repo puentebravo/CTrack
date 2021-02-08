@@ -22,4 +22,7 @@ first_name VARCHAR(30) NOT NULL,
 last_name VARCHAR(30) NOT NULL,
 role_id INTEGER(10) NOT NULL,
 manager_id INTEGER(10) NOT NULL
-)
+);
+
+INSERT INTO department (name)
+VALUES ("engineering"), ("Human_Resources"), ("Security"), ("Executive"), ("R&D"), ("Sales"), ("Marketing"), ("Legal");
