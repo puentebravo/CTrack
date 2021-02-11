@@ -57,7 +57,7 @@ function viewManagerChoices() {
 }
 
 function viewDeptChoices() {
-  var query = "SELECT department.department FROM department";
+  var query = "SELECT * FROM department";
   connection.query(query, function (err, res) {
     if (err) throw err;
     const deptArr = [];
@@ -234,6 +234,20 @@ function addDB() {
           break;
         case "Department":
           console.log("Department selected");
+          var query =
+          "INSERT INTO department (department)";
+        query +=
+          "VALUES (?)";
+        connection.query(
+          query,
+          [
+            answers.createDept
+          ],
+          function (err) {
+            if (err) throw err;
+            console.log("Record added.");
+          }
+        );
           break;
       }
       execDB();
