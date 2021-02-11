@@ -1,6 +1,7 @@
 const mysql = require("mysql");
 const inquirer = require("inquirer");
 const cTable = require("console.table");
+const figlet = require ("figlet")
 require("dotenv").config();
 
 var connection = mysql.createConnection({
@@ -17,8 +18,14 @@ var connection = mysql.createConnection({
 connection.connect(function (err) {
   if (err) throw err;
   console.log(`Database connection online at port 3306`);
-  execDB();
+  figlet("CTRACK V1.0", function (err, data){
+    if (err) throw err;
+    console.log(data)
+    execDB();
+  })
 });
+
+
 
 function viewEmp() {
   var query =
@@ -253,3 +260,4 @@ function addDB() {
       execDB();
     });
 }
+
