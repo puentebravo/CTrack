@@ -215,7 +215,22 @@ function addDB() {
           break;
         case "Role":
           console.log("Role Selected.");
-          
+          var query =
+            "INSERT INTO role (title, salary, department_id)";
+          query +=
+            "VALUES (?, ?, ?)";
+          connection.query(
+            query,
+            [
+              answers.addRole,
+              answers.roleSalary,
+              answers.roleDept,
+            ],
+            function (err) {
+              if (err) throw err;
+              console.log("Record added.");
+            }
+          );
           break;
         case "Department":
           console.log("Department selected");
