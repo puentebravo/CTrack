@@ -1,7 +1,7 @@
 const mysql = require("mysql");
 const inquirer = require("inquirer");
 const cTable = require("console.table");
-const figlet = require ("figlet")
+const figlet = require("figlet");
 require("dotenv").config();
 
 var connection = mysql.createConnection({
@@ -18,14 +18,12 @@ var connection = mysql.createConnection({
 connection.connect(function (err) {
   if (err) throw err;
   console.log(`Database connection online at port 3306`);
-  figlet("CTRACK V1.0", function (err, data){
+  figlet("CTRACK V1.0", function (err, data) {
     if (err) throw err;
-    console.log(data)
+    console.log(data);
     execDB();
-  })
+  });
 });
-
-
 
 function viewEmp() {
   var query =
@@ -40,7 +38,7 @@ function viewEmp() {
 }
 
 function viewRoleChoices() {
-  var query = "SELECT name FROM role";
+  var query = "SELECT id, name FROM role";
   connection.query(query, function (err, res) {
     if (err) throw err;
     const roleArr = [];
@@ -52,7 +50,8 @@ function viewRoleChoices() {
 }
 
 function viewManagerChoices() {
-  var query = "SELECT employee.first_name, employee.last_name FROM employee;";
+  var query =
+    "SELECT employee.id, employee.first_name, employee.last_name FROM employee;";
   connection.query(query, function (err, res) {
     if (err) throw err;
     const managerArr = [];
@@ -67,9 +66,14 @@ function viewDeptChoices() {
   var query = "SELECT * FROM department";
   connection.query(query, function (err, res) {
     if (err) throw err;
+    const deptRes = res;
     const deptArr = [];
-    for (let i = 0; i < res.length; i++) {
-      deptArr.push(res[i]);
+    for (i = 0; i < deptRes.length; i++) {
+      deptArr.push({
+        name: deptRes[i].department,
+        value: deptRes[i].id,
+        short: deptRes[i].id,
+      });
     }
     return deptArr;
   });
@@ -92,15 +96,13 @@ function execDB() {
     .then(function (answer) {
       switch (answer.topMenu) {
         case "View Record":
-          console.log("View selected.");
           viewDB();
           break;
         case "Create Record":
-          console.log("Create selected.");
           addDB();
           break;
         case "Update Record":
-          console.log("Update selected.");
+          updateDB();
           break;
         case "Delete Record":
           console.log("Delete selected.");
@@ -187,7 +189,7 @@ function addDB() {
         name: "roleDept",
         type: "rawlist",
         message: "Please select a department.",
-        choices: viewDeptChoices(),
+        choices: viewDeptChoices,
         when: (answers) => answers.createMenu === "Role",
       },
       {
@@ -200,11 +202,9 @@ function addDB() {
     .then(function (answers) {
       switch (answers.createMenu) {
         case "Employee":
-          console.log("employee selected");
           var query =
             "INSERT INTO employee (first_name, last_name, role_id, manager_id)";
-          query +=
-            "VALUES (?, ?, ?, ?)";
+          query += "VALUES (?, ?, ?, ?)";
           connection.query(
             query,
             [
@@ -221,18 +221,11 @@ function addDB() {
           );
           break;
         case "Role":
-          console.log("Role Selected.");
-          var query =
-            "INSERT INTO role (title, salary, department_id)";
-          query +=
-            "VALUES (?, ?, ?)";
+          var query = "INSERT INTO role (title, salary, department_id)";
+          query += "VALUES (?, ?, ?)";
           connection.query(
             query,
-            [
-              answers.addRole,
-              answers.roleSalary,
-              answers.roleDept,
-            ],
+            [answers.addRole, answers.roleSalary, answers.roleDept],
             function (err) {
               if (err) throw err;
               console.log("Record added.");
@@ -241,23 +234,70 @@ function addDB() {
           break;
         case "Department":
           console.log("Department selected");
-          var query =
-          "INSERT INTO department (department)";
-        query +=
-          "VALUES (?)";
-        connection.query(
-          query,
-          [
-            answers.createDept
-          ],
-          function (err) {
+          var query = "INSERT INTO department (department)";
+          query += "VALUES (?)";
+          connection.query(query, [answers.createDept], function (err) {
             if (err) throw err;
             console.log("Record added.");
-          }
-        );
+          });
           break;
       }
       execDB();
     });
 }
 
+function updateDB() {
+  // number inputs here will be replaced with rawlist/function inputs once I figure that out
+  inquirer
+    .prompt([
+      {
+        name: "updateMenu",
+        type: "rawlist",
+        message: "What kind of employee record would you like to update?",
+        choices: ["Role", "Manager"],
+      },
+      {
+        name: "updateRoleTarget",
+        type: "number",
+        message: "Which employee would you like to update?",
+        when: (answers) => answers.updateMenu === "Role"
+      },
+      {
+        name: "updateRoleVal",
+        type: "number",
+        message: "Please select a new role.",
+        when: (answers) => answers.updateMenu === "Role"
+      },
+      {
+        name: "updateMgrTarget",
+        type: "number",
+        message: "Please select an employee to reassign.",
+        when: (answers) => answers.updateMenu === "Manager"
+      }, 
+      {
+        name: "updateMgrVal",
+        type: "number",
+        message: "Please select a new manager.",
+        when: (answers) => answers.updateMenu === "Manager"
+      },
+    ])
+    .then(function(answers) {
+      switch (answers.updateMenu) {
+        case "Role":
+          var query = "UPDATE employee SET role_id = ? WHERE id = ?"
+          connection.query(query, [parseInt(answers.updateRoleVal), parseInt(answers.updateRoleTarget)], function (err) {
+            if (err) throw err;
+            console.log("Record updated!")
+          })
+          break;
+        case "Manager":
+          var query = "UPDATE employee SET manager_id = ? WHERE id = ?"
+          connection.query(query, [parseInt(answers.updateMgrVal), parseInt(answers.updateMgrTarget)], function (err) {
+            if (err) throw err;
+            console.log ("Employee reassigned.")
+          })
+          break;
+      }
+      execDB();
+    })
+}
