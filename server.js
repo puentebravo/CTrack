@@ -105,7 +105,7 @@ function execDB() {
           updateDB();
           break;
         case "Delete Record":
-          console.log("Delete selected.");
+          deleteDb();
           break;
         case "Exit":
           console.log("Thank you for using CTrack. Have a nice day.");
@@ -260,44 +260,115 @@ function updateDB() {
         name: "updateRoleTarget",
         type: "number",
         message: "Which employee would you like to update?",
-        when: (answers) => answers.updateMenu === "Role"
+        when: (answers) => answers.updateMenu === "Role",
       },
       {
         name: "updateRoleVal",
         type: "number",
         message: "Please select a new role.",
-        when: (answers) => answers.updateMenu === "Role"
+        when: (answers) => answers.updateMenu === "Role",
       },
       {
         name: "updateMgrTarget",
         type: "number",
         message: "Please select an employee to reassign.",
-        when: (answers) => answers.updateMenu === "Manager"
-      }, 
+        when: (answers) => answers.updateMenu === "Manager",
+      },
       {
         name: "updateMgrVal",
         type: "number",
         message: "Please select a new manager.",
-        when: (answers) => answers.updateMenu === "Manager"
+        when: (answers) => answers.updateMenu === "Manager",
       },
     ])
-    .then(function(answers) {
+    .then(function (answers) {
       switch (answers.updateMenu) {
         case "Role":
-          var query = "UPDATE employee SET role_id = ? WHERE id = ?"
-          connection.query(query, [parseInt(answers.updateRoleVal), parseInt(answers.updateRoleTarget)], function (err) {
-            if (err) throw err;
-            console.log("Record updated!")
-          })
+          var query = "UPDATE employee SET role_id = ? WHERE id = ?";
+          connection.query(
+            query,
+            [
+              parseInt(answers.updateRoleVal),
+              parseInt(answers.updateRoleTarget),
+            ],
+            function (err) {
+              if (err) throw err;
+              console.log("Record updated!");
+              viewEmp();
+            }
+          );
           break;
         case "Manager":
-          var query = "UPDATE employee SET manager_id = ? WHERE id = ?"
-          connection.query(query, [parseInt(answers.updateMgrVal), parseInt(answers.updateMgrTarget)], function (err) {
+          var query = "UPDATE employee SET manager_id = ? WHERE id = ?";
+          connection.query(
+            query,
+            [parseInt(answers.updateMgrVal), parseInt(answers.updateMgrTarget)],
+            function (err) {
+              if (err) throw err;
+              console.log("Employee reassigned.");
+              viewEmp();
+            }
+          );
+          break;
+      }
+      execDB();
+    });
+}
+
+function deleteDb() {
+  inquirer
+    .prompt([
+      {
+        name: "deleteMenu",
+        type: "rawlist",
+        message: "Which type of record would you like to delete?",
+        choices: ["Employee", "Role", "Department"],
+      },
+      {
+        name: "deleteEmp",
+        type: "number",
+        message: "Please specify an employee for removal.",
+        when: (answers) => answers.deleteMenu === "Employee",
+      },
+      {
+        name: "deleteRole",
+        type: "number",
+        message: "Please specify which role to remove.",
+        when: (answers) => answers.deleteMenu === "Role",
+      },
+      {
+        name: "deleteDept",
+        type: "number",
+        message: "Please select a department to remove.",
+        when: (answers) => answers.deleteMenu === "Department",
+      },
+    ])
+    .then(function (answers) {
+      switch (answers.deleteMenu) {
+        case "Employee":
+          var query = "DELETE FROM employee WHERE id = ?"
+          connection.query(query, [parseInt(answers.deleteEmp)], function (err) {
             if (err) throw err;
-            console.log ("Employee reassigned.")
+            console.log("Employee record deleted.");
+            viewEmp();
+          })
+          break;
+        case "Role":
+          var query = "DELETE FROM role WHERE id = ?"
+          connection.query(query, [parseInt(answers.deleteRole)], function (err) {
+            if (err) throw err;
+            console.log("Role deleted.")
+            viewEmp();
+          })
+        case "Department":
+          var query = "DELETE FROM department WHERE id = ?"
+          connection.query(query, [parseInt(answers.deleteDept)], function (err) {
+            if (err) throw err;
+            console.log("Department deleted.")
+            viewEmp();
           })
           break;
       }
       execDB();
-    })
+    });
 }
