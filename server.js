@@ -20,7 +20,6 @@ connection.connect(function (err) {
   console.log(`Database connection online at port 3306`);
   figlet("CTRACK V1.0", function (err, data) {
     if (err) throw err;
-    console.log(data);
     execDB();
   });
 });
@@ -40,43 +39,56 @@ function viewEmp() {
 function viewRoleChoices() {
   var query = "SELECT id, name FROM role";
   connection.query(query, function (err, res) {
-    if (err) throw err;
+    if (err) rej(err);
+    const roleRes = res;
     const roleArr = [];
-    for (let i = 0; i < res.length; i++) {
-      roleArr.push(res[i]);
+    for (let i = 0; i < roleRes.length; i++) {
+      roleArr.push({
+        name: roleRes[i].name,
+        value: roleRes[i].id,
+        short: roleRes[i].id,
+      });
     }
-    return roleArr;
   });
+  return roleArr;
 }
 
 function viewManagerChoices() {
-  var query =
-    "SELECT employee.id, employee.first_name, employee.last_name FROM employee;";
-  connection.query(query, function (err, res) {
-    if (err) throw err;
-    const managerArr = [];
-    for (let i = 0; i < res.length; i++) {
-      managerArr.push(res[i]);
-    }
-    return managerArr;
+  return new Promise((res, rej) => {
+    var query =
+      "SELECT employee.id, employee.first_name, employee.last_name FROM employee;";
+    connection.query(query, function (err, res) {
+      if (err) rej(err);
+      const manageRes = res;
+      const managerArr = [];
+      for (let i = 0; i < manageRes.length; i++) {
+        managerArr.push({
+          name: manageRes[i].first_name + " " + manageRes[i].last_name,
+          value: manageRes[i].id,
+          short: manageRes[i].id,
+        });
+      }
+    });
+    res(managerArr);
   });
 }
 
-function viewDeptChoices() {
+async function viewDeptChoices() {
   var query = "SELECT * FROM department";
-  connection.query(query, function (err, res) {
+ const choiceList = await connection.query(query, function (err, res) {
     if (err) throw err;
     const deptRes = res;
-    const deptArr = [];
-    for (i = 0; i < deptRes.length; i++) {
-      deptArr.push({
-        name: deptRes[i].department,
-        value: deptRes[i].id,
-        short: deptRes[i].id,
-      });
-    }
+    const deptArr = deptRes.map((obj) => {
+      return {
+        name: obj.department,
+        value: obj.id,
+        short: obj.id,
+      };
+    });
+    // console.log(deptArr)
     return deptArr;
   });
+  return choiceList
 }
 
 function execDB() {
@@ -138,7 +150,10 @@ function viewDB() {
     });
 }
 
-function addDB() {
+async function addDB() {
+  const deptChoices = viewDeptChoices();
+  console.log({ deptChoices });
+  // as in other spaces, number inputs here will be replaced with rawlist/function choices once that error is addressed.
   inquirer
     .prompt([
       {
@@ -189,7 +204,7 @@ function addDB() {
         name: "roleDept",
         type: "rawlist",
         message: "Please select a department.",
-        choices: viewDeptChoices,
+        choices: deptChoices,
         when: (answers) => answers.createMenu === "Role",
       },
       {
@@ -225,7 +240,7 @@ function addDB() {
           query += "VALUES (?, ?, ?)";
           connection.query(
             query,
-            [answers.addRole, answers.roleSalary, answers.roleDept],
+            [answers.addRole, parseInt(answers.roleSalary), parseInt(answers.roleDept)],
             function (err) {
               if (err) throw err;
               console.log("Record added.");
@@ -346,27 +361,39 @@ function deleteDb() {
     .then(function (answers) {
       switch (answers.deleteMenu) {
         case "Employee":
-          var query = "DELETE FROM employee WHERE id = ?"
-          connection.query(query, [parseInt(answers.deleteEmp)], function (err) {
-            if (err) throw err;
-            console.log("Employee record deleted.");
-            viewEmp();
-          })
+          var query = "DELETE FROM employee WHERE id = ?";
+          connection.query(
+            query,
+            [parseInt(answers.deleteEmp)],
+            function (err) {
+              if (err) throw err;
+              console.log("Employee record deleted.");
+              viewEmp();
+            }
+          );
           break;
         case "Role":
-          var query = "DELETE FROM role WHERE id = ?"
-          connection.query(query, [parseInt(answers.deleteRole)], function (err) {
-            if (err) throw err;
-            console.log("Role deleted.")
-            viewEmp();
-          })
+          var query = "DELETE FROM role WHERE id = ?";
+          connection.query(
+            query,
+            [parseInt(answers.deleteRole)],
+            function (err) {
+              if (err) throw err;
+              console.log("Role deleted.");
+              viewEmp();
+            }
+          );
         case "Department":
-          var query = "DELETE FROM department WHERE id = ?"
-          connection.query(query, [parseInt(answers.deleteDept)], function (err) {
-            if (err) throw err;
-            console.log("Department deleted.")
-            viewEmp();
-          })
+          var query = "DELETE FROM department WHERE id = ?";
+          connection.query(
+            query,
+            [parseInt(answers.deleteDept)],
+            function (err) {
+              if (err) throw err;
+              console.log("Department deleted.");
+              viewEmp();
+            }
+          );
           break;
       }
       execDB();
